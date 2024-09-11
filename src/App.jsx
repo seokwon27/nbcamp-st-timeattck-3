@@ -15,20 +15,30 @@ function App() {
 
   const [title, setTitle] = useState("");
   const [views, setViews] = useState(0);
-  console.log("title : ", title, "views : ", views);
+  // console.log("title : ", title, "views : ", views);
 
-  //데이터 읽기
+  //데이터 읽기========================
   const getPost = async () => {
     try {
       const response = await axios.get(`${API_URL}/posts`);
-      console.log("get response : ", response);
+      // console.log("get response : ", response);
       return response.data;
     } catch (error) {
       console.error("get error : ", error);
     }
   };
 
-  //데이터 추가하기
+  const getProfile = async () => {
+    const response = await axios.get(`${API_URL}/profile`);
+    return response.data;
+  };
+
+  const getComments = async () => {
+    const response = await axios.get(`${API_URL}/comments`);
+    return response.data;
+  };
+
+  //데이터 추가하기====================
   const addPost = async (newPost) => {
     try {
       const response = await axios.post(`${API_URL}/posts`, newPost);
@@ -47,25 +57,47 @@ function App() {
     },
   });
 
-  console.log("mutation : ", mutation);
-
-  const { data, isLoading, isError } = useQuery({
+  //post query
+  const {
+    data: posts,
+    isLoading: postsLoading,
+    isError: postsError,
+  } = useQuery({
     queryKey: ["posts"],
     queryFn: getPost,
   });
 
-  if (isLoading) {
+  //profile query
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    isError: profileError,
+  } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+  });
+  // console.log("profile : ", profile);
+
+  //comments query
+  const { data: comments } = useQuery({
+    queryKey: ["comments"],
+    queryFn: getComments,
+    enabled: false,
+  });
+
+  if (postsLoading || profileLoading) {
     ("로딩중입니다.");
     return;
   }
 
-  if (isError) {
+  if (postsError || profileError) {
     ("에러발생");
     return;
   }
 
   return (
     <>
+      <div>{`profile : ${profile.name}`}</div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -95,11 +127,12 @@ function App() {
         />
         <button>추가하기</button>
       </form>
-      {data.map((post) => {
+      {posts.map((post) => {
         return (
           <div key={post.id}>
             {post.title}
             {post.views}
+            <button>댓글보기</button>
           </div>
         );
       })}
